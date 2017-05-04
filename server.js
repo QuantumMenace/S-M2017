@@ -2,6 +2,8 @@ var io = require('socket.io');
 var express = require('express');
 var UUID = require('node-uuid');
 var http = require('http');
+//var sleep = require('sleep')
+//var phaser = require('phaser')
 
 var port = process.env.PORT || 3000;
 
@@ -53,4 +55,27 @@ sio.sockets.on('connection', function(client) {
 	
 
 });
-sio.sockets
+/*
+while(0) {
+	computeGameStep()
+	broadcastPositions()
+	sendAlerts()
+	thread.msleep(50)
+}
+*/
+
+
+function computeGameStep() {
+	//Recompute the positions of each player based off the most currently recieved position vector
+}
+
+function broadcastPostions() {
+
+}
+
+function sendAlerts() {
+	//Send specific messages to clients, such as you got eaten
+}
+
+
+
