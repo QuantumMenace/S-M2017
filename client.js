@@ -3,13 +3,18 @@
 
 var player; 
 var cursors; 
+var clientID;
+var positionInfo = [];
+var players = {};
 var game = new Phaser.Game(800, 600, Phaser.AUTO, '', { preload: preload, create: create, update: update, render: render });
 var socket = io.connect('/');
-			socket.on('clientconnected', function( data ) {
-		  		console.log( 'Connected successfully to the socket.io server. My server side ID is ' + data.id );
-		  		//ctx.font = "30px Arial"; 
-		  		//ctx.fillText("Server ID is " + data.id, 10, 50)
+socket.on('clientconnected', function( data ) {
+	clientID = data.id;
+	console.log( 'Connected successfully to the socket.io server. My server side ID is ' + data.id );
 });
+socket.on('update', function( data) {
+	positionInfo = data.msg; 
+})
 
 function preload() {
 	game.stage.backgroundColor = '#85b5e1'; 
@@ -46,55 +51,25 @@ function create() {
 function update() {
 	player.rotation = game.physics.arcade.moveToPointer(player, 60, game.input.activePointer, 600, 600); 
 	socket.emit("translate", {x: player.x, y: player.y });
+	for (i = 0; i < positionInfo.length; i++) {
+		info = positionInfo[i]
+		if (info["userid"] == clientID) {
+
+		}
+		else if (!(info["userid"] in players)) {
+			console.log("adding player sprite")
+			players[info["userid"]] = game.add.sprite(info["x"], info["y"], 'player');
+		}
+		else {
+			players[info["userid"]].x = info["x"]; 
+			players[info["userid"]].y = info["y"];
+		}
+	}
+
 }
 
 function render() {
 
 }
 
-
-/*
-function Blob(x, y, size){
-	this.pos = createVector(x, y);
-	this.r = size;
-	
-	this.update = function(){
-		var mouse = createVector(mouseX - width/2, mouseY - height/2);
-		mouse.setMag(3);
-		this.pos.add(mouse);
-	}
-	
-	this.show = function(){
-		fill(255);
-		ellipse(this.pos.x,this.pos.y,this.r*2, this.r*2)
-	}
-}
-
-var blob;
-var blobs = [];
-
-function setup() {
-	createCanvas(600, 600);
-	blob = new Blob(0, 0, 64);
-	for(var i = 0; i < 50; i++){
-		var x = random(-width, width)
-		var y = random(-height, height)
-		blobs[i] = new Blob(x, y, 16);
-	}
-}
-
-function draw() {
-	background(0);
-	px = width/2-blob.pos.x
-	py = height/2-blob.pos.y
-    console.log("moved to (" + px +", " + py + ")");
-	socket.emit("translate", {x: px, y: py })
-	translate(px, py)
-	blob.show();
-	blob.update();
-	for(var i = 0; i < blobs.length; i++){
-		blobs[i].show();
-	}
-}
-*/ 
 
