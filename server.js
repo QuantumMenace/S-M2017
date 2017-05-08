@@ -2,7 +2,6 @@ var io = require('socket.io');
 var express = require('express');
 var UUID = require('node-uuid');
 var http = require('http');
-var sleep = require('sleep')
 //var phaser = require('phaser')
 
 var port = process.env.PORT || 3000;
@@ -82,7 +81,6 @@ while(0) {
 	computeGameStep()
 	broadcastPostions()
 	sendAlerts()
-	sleep.msleep(1000)
 }
 
 
