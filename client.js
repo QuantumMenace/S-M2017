@@ -21,8 +21,10 @@ function preload() {
 	game.load.baseURL = 'http://examples.phaser.io/assets/'; 
 	game.load.crossOrigin = 'anonymous'; 
 
-	game.load.image('player', 'sprites/wabbit.png'); 
+	game.load.image('player', 'sprites/wabbit.png');
+	game.load.image('player2', 'sprites/treasure_trap.png');
 	game.load.image('background', 'tests/debug-grid-1920x1920.png'); 
+	playerModel = 'player';
 }
 
 
@@ -48,17 +50,36 @@ function create() {
     
 }
 
+function setModel(xVal, yVal, modelName) {
+	if (modelName == playerModel) {
+		return;
+	}
+	player.destroy();
+	playerModel = modelName;
+	player = game.add.sprite(player.x, player.y, playerModel);
+	game.physics.arcade.enable(player);
+	player.anchor.setTo(0.5, 0.5);
+	player.body.collideWorldBounds = false;
+	game.camera.follow(player);
+	player.body.allowRotation = false;
+	game.physics.enable(player, Phaser.Physics.ARCADE);
+}
+
 function update() {
 	player.rotation = game.physics.arcade.moveToPointer(player, 60, game.input.activePointer, 600, 600); 
 	socket.emit("translate", {x: player.x, y: player.y });
 	for (i = 0; i < positionInfo.length; i++) {
 		info = positionInfo[i]
 		if (info["userid"] == clientID) {
-
+			if (player.x > 960) {
+				setModel(player.x, player.y, 'player2');
+			} else if (player.x < 640) {
+				setModel(player.x, player.y, 'player');
+			}
 		}
 		else if (!(info["userid"] in players)) {
 			console.log("adding player sprite")
-			players[info["userid"]] = game.add.sprite(info["x"], info["y"], 'player');
+			players[info["userid"]] = game.add.sprite(info["x"], info["y"], playerModel);
 		}
 		else {
 			players[info["userid"]].x = info["x"]; 
