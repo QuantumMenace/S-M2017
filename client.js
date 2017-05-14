@@ -66,15 +66,15 @@ function setModel(xVal, yVal, modelName) {
 }
 
 function update() {
-	player.rotation = game.physics.arcade.moveToPointer(player, 60, game.input.activePointer, 600, 600); 
-	socket.emit("translate", {rotation: player.rotation });
+	player.rotation = game.physics.arcade.moveToPointer(player, 120, game.input.activePointer); 
+	socket.emit("translate", {rotation: player.rotation, x: player.x, y: player.y});
 	for (i = 0; i < positionInfo.length; i++) {
 		info = positionInfo[i]
 		if (info["userid"] == clientID) {
 			if (player.x > 960) {
-				//setModel(player.x, player.y, 'player2');
+				setModel(player.x, player.y, 'player2');
 			} else if (player.x < 640) {
-				//setModel(player.x, player.y, 'player');
+				setModel(player.x, player.y, 'player');
 			}
 		}
 		else {
@@ -83,8 +83,9 @@ function update() {
 				players[info["userid"]] = game.add.sprite(1000, 1000, playerModel);
 				players[info["userid"]].anchor.setTo(0.5, 0.5);
 			}
-				players[info["userid"]].rotation= info["rotation"]; 
-				//players[info["userid"]].y = info["y"];
+			players[info["userid"]].rotation= info["rotation"]; 
+			players[info["userid"]].x = info["x"];
+			players[info["userid"]].y = info["y"];
 
 			if(checkOverlap(player, players[info["userid"]])) {
 				//send message to server regarding collision

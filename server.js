@@ -10,7 +10,7 @@ var game = express();
 var server = http.createServer(game);
 var verbose = false;
 
-var host = "137.112.236.169"
+var host = "137.112.236.129"
 
 server.listen(port, host);
 
@@ -58,8 +58,8 @@ sio.sockets.on('connection', function(client) {
 	clients.push(client.info);
 	client.on('translate', function(data) {
 		client.info["rotation"] = data.rotation;
- 		//client.info["x"] = data.x
-		//client.info["y"] = data.y 
+ 		client.info["x"] = data.x
+		client.info["y"] = data.y 
 		/*console.log("moved to (" + x +", " + y + ")");*/
 
 	})	
