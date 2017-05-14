@@ -66,6 +66,7 @@ sio.sockets.on('connection', function(client) {
 	client.on('disconnect', function() {
 		for (i =0; i < clients.length; i++) {
 			if (clients[i]["userid"] == client.info["userid"]) {
+				sio.sockets.emit("playerDisconnect", {userid: clients[i]["userid"]});
 				clients.splice(i, 1);
 			}
 		}

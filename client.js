@@ -15,6 +15,9 @@ socket.on('clientconnected', function( data ) {
 socket.on('update', function( data) {
 	positionInfo = data.msg; 
 })
+socket.on('playerDisconnect', function(data) {
+	players[data.userid].destroy();
+});
 
 function preload() {
 	game.stage.backgroundColor = '#85b5e1'; 
