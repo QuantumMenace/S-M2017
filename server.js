@@ -10,7 +10,7 @@ var game = express();
 var server = http.createServer(game);
 var verbose = false;
 
-var host = "127.0.0.1"
+var host = "137.112.236.169"
 
 server.listen(port, host);
 
@@ -57,8 +57,9 @@ sio.sockets.on('connection', function(client) {
 	console.log('\t socket.io:: player ' + client.info["userid"] + ' connected');
 	clients.push(client.info);
 	client.on('translate', function(data) {
-		client.info["x"] = data.x
-		client.info["y"] = data.y 
+		client.info["rotation"] = data.rotation;
+ 		//client.info["x"] = data.x
+		//client.info["y"] = data.y 
 		/*console.log("moved to (" + x +", " + y + ")");*/
 
 	})	
@@ -70,7 +71,10 @@ sio.sockets.on('connection', function(client) {
 		}
 		console.log('\t socket.io:: player ' + client.info["userid"] + ' disconnected');
 	});
-	
+	client.on('collision', function(data) {
+		console.log("Collision between" + data.object1 + " " + data.object2); 
+		//clients.splice(data.object2, 1);
+	})
 
 });
 
