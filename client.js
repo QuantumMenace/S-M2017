@@ -6,18 +6,16 @@ var cursors;
 var clientID;
 var positionInfo = [];
 var players = {};
+var lock = 1;
+
 var game = new Phaser.Game(800, 600, Phaser.AUTO, '', { preload: preload, create: create, update: update, render: render });
-var socket = io.connect('/');
-socket.on('clientconnected', function( data ) {
-	clientID = data.id;
-	console.log( 'Connected successfully to the socket.io server. My server side ID is ' + data.id );
-});
-socket.on('update', function( data) {
-	positionInfo = data.msg; 
-})
-socket.on('playerDisconnect', function(data) {
-	players[data.userid].destroy();
-});
+var newPosition = [-1000, -1000];
+
+function setNewPostion(x, y) {
+	player.x = x;
+	player.y = y;
+}
+var socket;
 
 function preload() {
 	game.stage.backgroundColor = '#85b5e1'; 
@@ -30,27 +28,43 @@ function preload() {
 	playerModel = 'player';
 }
 
-
-
+function initHandlers(s) {
+	s.on('clientconnected', function( data ) {
+		clientID = data.id;
+		newPosition[0] = data.x; 
+		newPosition[1] = data.y;
+		lock = 0
+		console.log( 'Connected successfully to the socket.io server. My server side ID is ' + data.id );
+	});
+	s.on('update', function( data) {
+		positionInfo = data.msg; 
+	})
+	s.on('playerDisconnect', function(data) {
+		players[data.userid].destroy();
+	});
+	s.on('movePlayer', function(data) {
+		setNewPostion(data.x, data.y);
+	})
+}
 function create() {
-   game.add.tileSprite(0, 0, 1920, 1920, 'background');
+	socket = io.connect('/');
+	initHandlers(socket);
+	
+	game.add.tileSprite(0, 0, 1920, 1920, 'background');
 
-    game.world.setBounds(0, 0, 1920, 1920);
-    
-    player = game.add.sprite(game.world.centerX, game.world.centerY, 'player');
+	game.world.setBounds(0, 0, 1920, 1920);
 
-    game.physics.arcade.enable(player);
-    player.anchor.setTo(0.5, 0.5)
-
-    player.body.collideWorldBounds = false;
-
-    game.physics.startSystem(Phaser.Physics.ARCADE);
-    game.camera.follow(player); 
-    
-    player.body.allowRotation = false;
-    
-    game.physics.enable(player, Phaser.Physics.ARCADE);
-    
+	player = game.add.sprite(newPosition[0], newPosition[1], 'player');
+	game.physics.arcade.enable(player);
+	player.anchor.setTo(0.5, 0.5)
+	player.body.collideWorldBounds = false;
+	game.physics.startSystem(Phaser.Physics.ARCADE);
+	game.camera.follow(player); 
+  
+	player.body.allowRotation = false;
+	
+	game.physics.enable(player, Phaser.Physics.ARCADE);
+	 
 }
 
 function setModel(xVal, yVal, modelName) {
@@ -93,7 +107,7 @@ function update() {
 			if(checkOverlap(player, players[info["userid"]])) {
 				//send message to server regarding collision
 				console.log("woah");
-				socket.emit("collision", {object1: clientID, object2: info["userid"]}); 
+				//socket.emit("collision", {object1: clientID, object2: info["userid"]}); 
 			}
 		}
 

@@ -49,11 +49,18 @@ function broadcastPostions() {
 function sendAlerts() {
 	//Send specific messages to clients, such as you got eaten
 }
+
+function generatePosition() {
+	var x = Math.floor(Math.random()*1920); 
+	var y = Math.floor(Math.random()*1920); 
+	return [x, y];
+}
 sio.sockets.on('connection', function(client) {
 	client.info = {};
 	client.info["userid"] = UUID();
-
-	client.emit('clientconnected', { id: client.info["userid"] });
+	var position = generatePosition();
+	client.emit('clientconnected', { id: client.info["userid"]});
+	client.emit('movePlayer', {x: position[0], y: position[1]});
 	console.log('\t socket.io:: player ' + client.info["userid"] + ' connected');
 	clients.push(client.info);
 	client.on('translate', function(data) {
