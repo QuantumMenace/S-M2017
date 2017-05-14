@@ -43,6 +43,7 @@ function initHandlers(s) {
 		players[data.userid].destroy();
 	});
 	s.on('movePlayer', function(data) {
+		console.log("moving player to new location")
 		setNewPostion(data.x, data.y);
 	})
 }
@@ -107,7 +108,7 @@ function update() {
 			if(checkOverlap(player, players[info["userid"]])) {
 				//send message to server regarding collision
 				console.log("woah");
-				//socket.emit("collision", {object1: clientID, object2: info["userid"]}); 
+				socket.emit("collision", {object1: clientID, object2: info["userid"]}); 
 			}
 		}
 

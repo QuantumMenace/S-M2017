@@ -38,6 +38,14 @@ game.get( '/*' , function( req, res, next ) {
 });
 
 clients = []
+
+function handleCollision(client, o1, o2) { 
+	var position = generatePosition();
+	client.emit('movePlayer', {x: position[0], y: position[1]});
+
+
+
+}
 function computeGameStep() {
 	//Recompute the positions of each player based off the most currently recieved position vector
 }
@@ -81,6 +89,7 @@ sio.sockets.on('connection', function(client) {
 	});
 	client.on('collision', function(data) {
 		console.log("Collision between" + data.object1 + " " + data.object2); 
+		handleCollision(client, data.object1, data.object2);
 		//clients.splice(data.object2, 1);
 	})
 
