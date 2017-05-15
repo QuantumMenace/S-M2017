@@ -59,7 +59,7 @@ function handleCollision(client, other) {
 }
 
 function generateFood() { 
-	if (currentFood < MAXFOOD) {
+	while (currentFood < MAXFOOD) {
 		info = {}; 
 		info["userid"] = UUID(); 
 		info["class"] = 0; 
@@ -68,6 +68,7 @@ function generateFood() {
 		info["y"] = position[1]; 
 		info["rotation"] = 0;
 		clients.push(info);
+		currentFood++;
 	}
 }
 

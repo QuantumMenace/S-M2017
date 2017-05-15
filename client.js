@@ -96,11 +96,12 @@ function update() {
 	for (i = 0; i < positionInfo.length; i++) {
 		info = positionInfo[i]
 		if (info["userid"] == clientID) {
-			if (player.x > 960) {
-				setModel(player.x, player.y, 'player2');
-			} else if (player.x < 640) {
-				setModel(player.x, player.y, 'player');
-			}
+			player.loadTexture(modelList[player.class])
+			// if (player.x > 960) {
+			// 	setModel(player.x, player.y, 'player2');
+			// } else if (player.x < 640) {
+			// 	setModel(player.x, player.y, 'player');
+			// }
 		}
 		else {
 			if (!(info["userid"] in players)) {
@@ -111,7 +112,7 @@ function update() {
 			players[info["userid"]].rotation= info["rotation"]; 
 			players[info["userid"]].x = info["x"];
 			players[info["userid"]].y = info["y"];
-
+			players[info["userid"]].loadTexture(modelList[info["class"]]);
 			if(checkOverlap(player, players[info["userid"]])) {
 				//send message to server regarding collision
   				socket.emit("collision", {object: info}); 
