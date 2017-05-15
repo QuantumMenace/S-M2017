@@ -91,7 +91,7 @@ function setModel(xVal, yVal, modelName) {
 }
 
 function update() {
-	player.rotation = game.physics.arcade.moveToPointer(player, 120, game.input.activePointer); 
+	player.rotation = game.physics.arcade.moveToPointer(player, 200, game.input.activePointer); 
 	socket.emit("translate", {rotation: player.rotation, x: player.x, y: player.y});
 	for (i = 0; i < positionInfo.length; i++) {
 		info = positionInfo[i]

@@ -36,7 +36,6 @@ game.get( '/*' , function( req, res, next ) {
 });
 
 clients = []
-collisions = {};
 var MAXFOOD = 20;
 var currentFood = 0; 
 
@@ -44,15 +43,23 @@ var currentFood = 0;
 function handleCollision(client, other) { 
 	var position = generatePosition();
 	if (client.info["class"] == other["class"] - 1) {
+		client.info["foodCount"] = 0;
+		client.info["class"] = 1;
 		client.emit('movePlayer', {x: position[0], y: position[1], class:1});
 	}
-	else if (other["class"] == 0 && client.info["class"] ==1 ) {
+	else if (other["class"] == 0) {
 		//food eaten
 		for (i =0; i < clients.length; i++) {
 			if (clients[i]["userid"] == other["userid"]) {
 				clients[i]["x"] = position[0]; 
 				clients[i]["y"] = position[1];
+				break
 			}
+		}
+		client.info["foodCount"]++;
+		if(client.info["foodCount"] == 20) {
+			client.info["class"] = 2;
+			client.emit('movePlayer', {x: client.info["x"], y: client.info["y"], class: 2});
 		}
 
 	}
@@ -90,6 +97,7 @@ sio.sockets.on('connection', function(client) {
 	client.info = {};
 	client.info["userid"] = UUID();
 	client.info["class"] = 1;
+	client.info["foodCount"] = 0;
 	var position = generatePosition();
 	client.emit('clientconnected', { id: client.info["userid"]});
 	//each client starts as a fish
