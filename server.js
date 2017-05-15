@@ -4,16 +4,14 @@ var UUID = require('node-uuid');
 var http = require('http');
 //var phaser = require('phaser')
 
-var port = process.env.PORT || 3000;
 
 var game = express();
 var server = http.createServer(game);
 var verbose = false;
 
-var host = "137.112.236.129"
-
+var port = process.env.PORT || 3000;
+var host = "137.112.236.153"
 server.listen(port, host);
-
 var sio = io.listen(server)
 // sio.set('authorization', function (handshakeData, callback) {
 // 	callback(null, true);
@@ -38,16 +36,39 @@ game.get( '/*' , function( req, res, next ) {
 });
 
 clients = []
+collisions = {};
+var MAXFOOD = 20;
+var currentFood = 0; 
 
-function handleCollision(client, o1, o2) { 
+
+function handleCollision(client, other) { 
 	var position = generatePosition();
-	client.emit('movePlayer', {x: position[0], y: position[1]});
+	if (client.info["class"] == other["class"] - 1) {
+		client.emit('movePlayer', {x: position[0], y: position[1], class:1});
+	}
+	else if (other["class"] == 0 && client.info["class"] ==1 ) {
+		//food eaten
+		for (i =0; i < clients.length; i++) {
+			if (clients[i]["userid"] == other["userid"]) {
+				clients[i]["x"] = position[0]; 
+				clients[i]["y"] = position[1];
+			}
+		}
 
-
-
+	}
 }
-function computeGameStep() {
-	//Recompute the positions of each player based off the most currently recieved position vector
+
+function generateFood() { 
+	if (currentFood < MAXFOOD) {
+		info = {}; 
+		info["userid"] = UUID(); 
+		info["class"] = 0; 
+		var position = generatePosition();
+		info["x"] = position[0]; 
+		info["y"] = position[1]; 
+		info["rotation"] = 0;
+		clients.push(info);
+	}
 }
 
 function broadcastPostions() {
@@ -63,12 +84,15 @@ function generatePosition() {
 	var y = Math.floor(Math.random()*1920); 
 	return [x, y];
 }
+
 sio.sockets.on('connection', function(client) {
 	client.info = {};
 	client.info["userid"] = UUID();
+	client.info["class"] = 1;
 	var position = generatePosition();
 	client.emit('clientconnected', { id: client.info["userid"]});
-	client.emit('movePlayer', {x: position[0], y: position[1]});
+	//each client starts as a fish
+	client.emit('movePlayer', {x: position[0], y: position[1], class: client.info["class"]});
 	console.log('\t socket.io:: player ' + client.info["userid"] + ' connected');
 	clients.push(client.info);
 	client.on('translate', function(data) {
@@ -88,25 +112,9 @@ sio.sockets.on('connection', function(client) {
 		console.log('\t socket.io:: player ' + client.info["userid"] + ' disconnected');
 	});
 	client.on('collision', function(data) {
-		console.log("Collision between" + data.object1 + " " + data.object2); 
-		handleCollision(client, data.object1, data.object2);
-		//clients.splice(data.object2, 1);
+		handleCollision(client, data.object);
 	})
 
 });
-
+generateFood()
 setInterval(broadcastPostions, 10);
-
-
-while(0) {
-	computeGameStep()
-	broadcastPostions()
-	sendAlerts()
-}
-
-
-
-
-
-
-

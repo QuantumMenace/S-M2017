@@ -7,13 +7,14 @@ var clientID;
 var positionInfo = [];
 var players = {};
 var lock = 1;
-
+var modelList = [];
 var game = new Phaser.Game(800, 600, Phaser.AUTO, '', { preload: preload, create: create, update: update, render: render });
 var newPosition = [-1000, -1000];
 
-function setNewPostion(x, y) {
+function setNewPostion(x, y, pClass) {
 	player.x = x;
 	player.y = y;
+	player.class = pClass;
 }
 var socket;
 
@@ -22,16 +23,22 @@ function preload() {
 	game.load.baseURL = 'http://examples.phaser.io/assets/'; 
 	game.load.crossOrigin = 'anonymous'; 
 
+	game.load.image('food', 'sprites/carrot.png')
 	game.load.image('player', 'sprites/wabbit.png');
 	game.load.image('player2', 'sprites/treasure_trap.png');
 	game.load.image('background', 'tests/debug-grid-1920x1920.png'); 
 	playerModel = 'player';
+	sharkModel = 'player2'; 
+	foodModel = 'food';
+	modelList.push(foodModel);
+	modelList.push(playerModel); 
+	modelList.push(sharkModel);
 }
 
 function initHandlers(s) {
 	s.on('clientconnected', function( data ) {
 		clientID = data.id;
-		newPosition[0] = data.x; 
+		newPosition[0] = data.x;
 		newPosition[1] = data.y;
 		lock = 0
 		console.log( 'Connected successfully to the socket.io server. My server side ID is ' + data.id );
@@ -44,7 +51,7 @@ function initHandlers(s) {
 	});
 	s.on('movePlayer', function(data) {
 		console.log("moving player to new location")
-		setNewPostion(data.x, data.y);
+		setNewPostion(data.x, data.y, data.class);
 	})
 }
 function create() {
@@ -107,8 +114,7 @@ function update() {
 
 			if(checkOverlap(player, players[info["userid"]])) {
 				//send message to server regarding collision
-				console.log("woah");
-				socket.emit("collision", {object1: clientID, object2: info["userid"]}); 
+  				socket.emit("collision", {object: info}); 
 			}
 		}
 
