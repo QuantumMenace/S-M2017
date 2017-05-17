@@ -6,6 +6,7 @@ var cursors;
 var clientID;
 var positionInfo = [];
 var players = {};
+var collisions = {};
 var lock = 1;
 var modelList = [];
 var game = new Phaser.Game(800, 600, Phaser.AUTO, '', { preload: preload, create: create, update: update, render: render });
@@ -54,7 +55,12 @@ function initHandlers(s) {
 		console.log("moving player to new location")
 		setNewPostion(data.x, data.y, data.class);
 	})
+
+	s.on("classChange", function(data){
+		player.class = data.class;
+	})
 }
+
 function create() {
 	socket = io.connect('/');
 	initHandlers(socket);
@@ -98,17 +104,16 @@ function update() {
 		info = positionInfo[i]
 		if (info["userid"] == clientID) {
 			player.loadTexture(modelList[player.class])
-			// if (player.x > 960) {
-			// 	setModel(player.x, player.y, 'player2');
-			// } else if (player.x < 640) {
-			// 	setModel(player.x, player.y, 'player');
-			// }
+			player.foodCount = info["foodCount"];
+			player.timer = info["timeout"];
+			player.playersEaten = info["playersEaten"];
 		}
 		else {
 			if (!(info["userid"] in players)) {
 				console.log("adding player sprite")
-				players[info["userid"]] = game.add.sprite(1000, 1000, playerModel);
+				players[info["userid"]] = game.add.sprite(-1000, -1000, playerModel);
 				players[info["userid"]].anchor.setTo(0.5, 0.5);
+				players[info["userid"]].isColliding = 0
 			}
 			players[info["userid"]].rotation= info["rotation"]; 
 			players[info["userid"]].x = info["x"];
@@ -116,13 +121,21 @@ function update() {
 			players[info["userid"]].loadTexture(modelList[info["class"]]);
 			if(checkOverlap(player, players[info["userid"]])) {
 				//send message to server regarding collision
-  				socket.emit("collision", {object: info}); 
+				if (!(players[info["userid"]].isColliding)) {
+					players[info["userid"]].isColliding = 1;
+  					socket.emit("collision", {object: info}); 
+  					setTimeout(allowCollision, 1000, info["userid"])
+  				}
 			}
 		}
-
 	}
 
 }
+
+function allowCollision(userid) {
+	players[userid].isColliding = 0
+}
+
 
 function checkOverlap(spriteA, spriteB) {
 	var boundsA = spriteA.getBounds(); 
@@ -131,7 +144,11 @@ function checkOverlap(spriteA, spriteB) {
 }
 
 function render() {
-	game.debug.text(clientID, 100, 300);
+	game.debug.text("Food Count: "+ player.foodCount, 20, 20);
+	if(player.class == 2) {
+		game.debug.text("Time-to-Live: " + player.timer/1000, 20, 60);
+		game.debug.text("Minnows Eaten: " + player.playersEaten, 20, 40)
+	}
 }
 
 
