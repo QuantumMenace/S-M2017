@@ -10,7 +10,7 @@ var server = http.createServer(game);
 var verbose = false;
 
 var port = process.env.PORT || 3000;
-var host = "137.112.236.153"
+var host = "137.112.236.138"
 server.listen(port, host);
 var sio = io.listen(server)
 // sio.set('authorization', function (handshakeData, callback) {
@@ -36,32 +36,72 @@ game.get( '/*' , function( req, res, next ) {
 });
 
 clients = []
-var MAXFOOD = 20;
+collisions = {}
+var MAXFOOD = 200;
 var currentFood = 0; 
 
 
 function handleCollision(client, other) { 
 	var position = generatePosition();
-	if (client.info["class"] == other["class"] - 1) {
-		client.info["foodCount"] = 0;
-		client.info["class"] = 1;
-		client.emit('movePlayer', {x: position[0], y: position[1], class:1});
+	
+	if (client.info["class"] == 1 &&  other["class"] == 2) {
+		client.info["timeout"] = 0;
+		console.log(other["userid"] + " has eaten " +client.info["userid"]);
+		resetPlayer(client);
+	}
+	else if (client.info["class"] == 2 && other["class"] == 1 ) {
+		client.info["timeout"] = client.info["timeout"] + 10000; 
+		console.log(client.info["userid"] + " gets more time to live for eating player " + other["userid"])
 	}
 	else if (other["class"] == 0) {
 		//food eaten
 		for (i =0; i < clients.length; i++) {
 			if (clients[i]["userid"] == other["userid"]) {
-				clients[i]["x"] = position[0]; 
-				clients[i]["y"] = position[1];
+				setTimeout(makeFood, 5000); 
+				sio.sockets.emit("playerDisconnect", {userid: clients[i]["userid"]});
+				clients.splice(i, 1);
 				break
 			}
 		}
 		client.info["foodCount"]++;
+		//minnow eats carrot
+		if (client.info["class"] == 1) {
+			console.log(client.info["userid"] + " a minnow, has eaten a carrot")
+		}
+		//minnow becomes shark
 		if(client.info["foodCount"] == 20) {
 			client.info["class"] = 2;
+			console.log("player has become a shark")
 			client.emit('movePlayer', {x: client.info["x"], y: client.info["y"], class: 2});
+			client.info["timeout"] = 0; 
+			setTimeout(resetPlayer, 20000, client);
+			
+		}
+		//shark eats carrot
+		if (client.info["class"] == 2) {
+			client.info["timeout"] = client.info["timeout"] + 1000
+			console.log(client.info["userid"] + " a shark, has eaten a carrot")
 		}
 
+	}
+	delete collisions[client.info["userid"]];
+}
+
+function makeFood() {
+
+}
+
+function resetPlayer(client) {
+	if (client.info["timeout"] !=0) {
+		console.log(client.info["userid"] + " has " + client.info["timeout"] + " to live" )
+		setTimeout(resetPlayer, client.info["timeout"], client)
+		client.info["timeout"] = 0
+	} else {
+		var position = generatePosition();
+		
+		client.info["foodCount"] = 0;
+		client.info["class"] = 1;
+		client.emit('movePlayer', {x: position[0], y: position[1], class:1});
 	}
 }
 
@@ -98,6 +138,7 @@ sio.sockets.on('connection', function(client) {
 	client.info["userid"] = UUID();
 	client.info["class"] = 1;
 	client.info["foodCount"] = 0;
+	client.info["timeout"] = 0
 	var position = generatePosition();
 	client.emit('clientconnected', { id: client.info["userid"]});
 	//each client starts as a fish
@@ -121,7 +162,16 @@ sio.sockets.on('connection', function(client) {
 		console.log('\t socket.io:: player ' + client.info["userid"] + ' disconnected');
 	});
 	client.on('collision', function(data) {
-		handleCollision(client, data.object);
+		if (!(client.info["userid"] in collisions)) {
+			collisions[client.info["userid"]] = data.object["userid"];
+			handleCollision(client, data.object);
+		}
+		else { 
+			if(collisions[client.info["userid"]] != data.object["userid"] ) {
+				//new collison idk what to do here yet
+			}
+
+		}
 	})
 
 });

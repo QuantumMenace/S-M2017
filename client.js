@@ -48,6 +48,7 @@ function initHandlers(s) {
 	})
 	s.on('playerDisconnect', function(data) {
 		players[data.userid].destroy();
+		delete players[data.userid];
 	});
 	s.on('movePlayer', function(data) {
 		console.log("moving player to new location")
@@ -130,7 +131,7 @@ function checkOverlap(spriteA, spriteB) {
 }
 
 function render() {
-
+	game.debug.text(clientID, 100, 300);
 }
 
 
