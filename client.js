@@ -9,7 +9,8 @@ var players = {};
 var collisions = {};
 var lock = 1;
 var modelList = [];
-var game = new Phaser.Game(800, 600, Phaser.AUTO, '', { preload: preload, create: create, update: update, render: render });
+var scale = 0.9;
+var game = new Phaser.Game(800, 700, Phaser.AUTO, '', { preload: preload, create: create, update: update, render: render });
 var newPosition = [-1000, -1000];
 
 function setNewPostion(x, y, pClass) {
@@ -21,13 +22,16 @@ var socket;
 
 function preload() {
 	game.stage.backgroundColor = '#85b5e1'; 
-	game.load.baseURL = 'http://examples.phaser.io/assets/'; 
+	//game.load.baseURL = 'http://examples.phaser.io/assets/'; 
 	game.load.crossOrigin = 'anonymous'; 
 
-	game.load.image('food', 'sprites/carrot.png')
-	game.load.image('player', 'sprites/wabbit.png');
-	game.load.image('player2', 'sprites/treasure_trap.png');
-	game.load.image('background', 'tests/debug-grid-1920x1920.png'); 
+	game.load.image('food', 'Images/food.png')
+	game.load.image('player', 'Images/minnow.png');
+	game.load.image('player2', 'Images/shark.png');
+	//game.load.image('background', 'http://examples.phaser.io/assets/sprites/splat.png'); 
+
+	game.load.image('background', 'Images/background.png'); 
+
 	playerModel = 'player';
 	sharkModel = 'player2'; 
 	foodModel = 'food';
@@ -71,6 +75,8 @@ function create() {
 
 	player = game.add.sprite(newPosition[0], newPosition[1], 'player');
 	game.physics.arcade.enable(player);
+	player.scale.setTo(scale,scale);
+
 	player.anchor.setTo(0.5, 0.5)
 	player.body.collideWorldBounds = false;
 	game.physics.startSystem(Phaser.Physics.ARCADE);
@@ -90,7 +96,6 @@ function setModel(xVal, yVal, modelName) {
 	playerModel = modelName;
 	player = game.add.sprite(player.x, player.y, playerModel);
 	game.physics.arcade.enable(player);
-	player.anchor.setTo(0.5, 0.5);
 	player.body.collideWorldBounds = false;
 	game.camera.follow(player);
 	player.body.allowRotation = false;
@@ -112,6 +117,7 @@ function update() {
 			if (!(info["userid"] in players)) {
 				console.log("adding player sprite")
 				players[info["userid"]] = game.add.sprite(-1000, -1000, playerModel);
+				players[info["userid"]].scale.setTo(scale,scale);
 				players[info["userid"]].anchor.setTo(0.5, 0.5);
 				players[info["userid"]].isColliding = 0
 			}
@@ -129,8 +135,8 @@ function update() {
 			}
 		}
 	}
-
 }
+
 
 function allowCollision(userid) {
 	players[userid].isColliding = 0
@@ -139,6 +145,7 @@ function allowCollision(userid) {
 
 function checkOverlap(spriteA, spriteB) {
 	var boundsA = spriteA.getBounds(); 
+	console.log(spriteA);
 	var boundsB = spriteB.getBounds(); 
 	return Phaser.Rectangle.intersects(boundsA, boundsB); 
 }

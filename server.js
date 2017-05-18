@@ -10,7 +10,7 @@ var server = http.createServer(game);
 var verbose = false;
 
 var port = process.env.PORT || 3000;
-var host = "137.112.236.138"
+var host = "137.112.236.154"
 server.listen(port, host);
 var sio = io.listen(server)
 // sio.set('authorization', function (handshakeData, callback) {
@@ -59,11 +59,11 @@ function handleCollision(client, other) {
 		//food eaten
 		for (i =clients.length -1; i >=0; i--) {
 			if (clients[i]["userid"] == other["userid"]) {
-				//setTimeout(makeFood, 5000); 
+				setTimeout(makeFood, 5000, i); 
 				// sio.sockets.emit("playerDisconnect", {userid: clients[i]["userid"]});
 				// clients.splice(i, 1);
-				clients[i].x = position[0];
-				clients[i].y = position[1];
+				clients[i].x = -500;
+				clients[i].y = -500;
 
 				client.info["foodCount"]++;
 				break
@@ -93,8 +93,10 @@ function handleCollision(client, other) {
 	client.emit("collisionHandled", {userid: other["userid"]});
 }
 
-function makeFood() {
-	//so great.
+function makeFood(index) {
+	var position = generatePosition()
+	clients[index].x = position[0]
+	clients[index].y = position[1]
 }
 
 function resetPlayer(client) {
@@ -135,6 +137,7 @@ function generatePosition() {
 }
 
 sio.sockets.on('connection', function(client) {
+	console.log(clients.length)
 	client.info = {};
 	client.info["userid"] = UUID();
 	client.info["class"] = 1;
